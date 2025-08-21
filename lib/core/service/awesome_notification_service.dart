@@ -30,7 +30,7 @@ class AwesomeNotificationService {
           channelGroupName: 'Basic group',
         )
       ],
-      debug: true,
+      debug: false,
     );
 
     final isAllowed = await AwesomeNotifications().isNotificationAllowed();

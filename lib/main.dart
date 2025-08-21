@@ -19,7 +19,7 @@ Future<void> main() async {
 
   await Workmanager().initialize(
     callbackDispatcher,
-    isInDebugMode: true,
+    isInDebugMode: false,
   );
 
   final dataSource = TaskLocalDataSource.instance;
