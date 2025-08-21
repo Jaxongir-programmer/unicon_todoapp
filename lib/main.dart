@@ -34,9 +34,9 @@ Future<void> main() async {
   await Workmanager().registerPeriodicTask(
     taskUniqueName,
     taskSimpleName,
-    frequency: const Duration(hours: 1),
+    frequency: const Duration(minutes: 15),
     existingWorkPolicy: ExistingWorkPolicy.keep,
-    inputData: {'older_minutes': 60},
+    inputData: {'older_minutes': 15},
     constraints: Constraints(
       networkType: NetworkType.not_required,
       requiresBatteryNotLow: false,

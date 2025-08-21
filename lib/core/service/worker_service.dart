@@ -1,31 +1,45 @@
+import 'package:todoapp/core/config/app_constants.dart';
 import 'package:workmanager/workmanager.dart';
 import '../../features/main/data/data_source/task_local_datasource.dart';
 import '../../features/main/data/models/task_model.dart';
 import 'awesome_notification_service.dart';
 
+
 const taskUniqueName = 'check_not_done_task';
 const taskSimpleName = 'checkNotDoneTask';
 
+@pragma('vm:entry-point')
 void callbackDispatcher() {
-  Workmanager().executeTask((task, inputData) async {
-    print("✅ Workmanager ishga tushdi: $task");
+  Workmanager().executeTask((taskName, inputData) async {
     await AwesomeNotificationService.initializateNotification();
 
-    final olderMinutes = (inputData?['older_minutes'] as int?) ?? 60; // default: 60 min
-    final stale = await TaskLocalDataSource.instance
-        .getStaleTodos(Duration(minutes: olderMinutes));
+    final dueList = await TaskLocalDataSource.instance.getDueUndoneAfter24h();
 
-    if (stale.isNotEmpty) {
-      await AwesomeNotificationService.showNotification(
-        message: TaskModel(
-          title: 'Eslatma',
-          description: 'Sizda ${stale.length} ta bajarilmagan vazifa bor',
-          isDone: false,
-          createdAt: DateTime.now(),
-        ),
-      );
+    for (final t in dueList) {
+      await AwesomeNotificationService.showTaskReminder(task: t);
     }
 
-    return Future.value(true);
+    return true;
   });
 }
+
+Future<void> initAndRegisterWorker({Duration frequency = const Duration(minutes: 15)}) async {
+  await Workmanager().initialize(
+    callbackDispatcher,
+    isInDebugMode: false,
+  );
+
+  await Workmanager().registerPeriodicTask(
+    taskUniqueName,
+    taskSimpleName,
+    frequency: frequency,
+    existingWorkPolicy: ExistingWorkPolicy.keep,
+    constraints: Constraints(
+      networkType: NetworkType.not_required,
+      requiresBatteryNotLow: false,
+      requiresCharging: false,
+    ),
+    backoffPolicy: BackoffPolicy.linear,
+  );
+}
+

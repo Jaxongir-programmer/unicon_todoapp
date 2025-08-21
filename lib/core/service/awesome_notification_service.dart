@@ -4,34 +4,41 @@ import 'package:awesome_notifications/awesome_notifications.dart';
 import 'package:flutter/material.dart';
 import 'package:todoapp/features/main/data/models/task_model.dart';
 
+import '../../features/main/data/data_source/task_local_datasource.dart';
+
 class AwesomeNotificationService {
   static Future<void> initializateNotification() async {
     await AwesomeNotifications().initialize(
-        null,
-        [
-          NotificationChannel(
-              channelKey: 'high_importance_channel',
-              channelName: 'Alerts',
-              channelDescription: 'Notification tests as alerts',
-              playSound: true,
-              onlyAlertOnce: true,
-              groupAlertBehavior: GroupAlertBehavior.Children,
-              importance: NotificationImportance.High,
-              defaultPrivacy: NotificationPrivacy.Private,
-              defaultColor: Colors.deepPurple,
-              ledColor: Colors.deepPurple)
-        ],
-        channelGroups: [NotificationChannelGroup(channelGroupKey: 'basic_channel_group', channelGroupName: 'Basic group')],
-        debug: true);
+      null,
+      [
+        NotificationChannel(
+          channelKey: 'high_importance_channel',
+          channelName: 'Alerts',
+          channelDescription: 'Notification tests as alerts',
+          playSound: true,
+          onlyAlertOnce: true,
+          groupAlertBehavior: GroupAlertBehavior.Children,
+          importance: NotificationImportance.High,
+          defaultPrivacy: NotificationPrivacy.Private,
+          defaultColor: Colors.deepPurple,
+          ledColor: Colors.deepPurple,
+        ),
+      ],
+      channelGroups: [
+        NotificationChannelGroup(
+          channelGroupKey: 'basic_channel_group',
+          channelGroupName: 'Basic group',
+        )
+      ],
+      debug: true,
+    );
 
-    await AwesomeNotifications().isNotificationAllowed().then((isAllowed) async {
-      print("JV = > $isAllowed");
-      if (!isAllowed) {
-        await AwesomeNotifications().requestPermissionToSendNotifications();
-      }
-    });
+    final isAllowed = await AwesomeNotifications().isNotificationAllowed();
+    if (!isAllowed) {
+      await AwesomeNotifications().requestPermissionToSendNotifications();
+    }
 
-    await AwesomeNotifications().setListeners(
+    AwesomeNotifications().setListeners(
       onActionReceivedMethod: onActionReceivedMethod,
       onNotificationCreatedMethod: onNotificationCreatedMethod,
       onNotificationDisplayedMethod: onNotificationDisplayedMethod,
@@ -39,40 +46,66 @@ class AwesomeNotificationService {
     );
   }
 
-  static Future<void> onNotificationCreatedMethod(ReceivedNotification receivedNotification) async {
+  static Future<void> onNotificationCreatedMethod(
+      ReceivedNotification receivedNotification,
+      ) async {
     debugPrint('onNotificationCreatedMethod');
   }
 
-  static Future<void> onNotificationDisplayedMethod(ReceivedNotification receivedNotification) async {
+  static Future<void> onNotificationDisplayedMethod(
+      ReceivedNotification receivedNotification,
+      ) async {
     debugPrint('onNotificationDisplayedMethod');
   }
 
-  static Future<void> onDismissActionReceivedMethod(ReceivedNotification receivedNotification) async {
+  static Future<void> onDismissActionReceivedMethod(
+      ReceivedAction receivedAction,
+      ) async {
     debugPrint('onDismissActionReceivedMethod');
   }
 
-  static Future<void> onActionReceivedMethod(ReceivedNotification receivedNotification) async {
+  static Future<void> onActionReceivedMethod(
+      ReceivedAction receivedAction,
+      ) async {
     debugPrint('onActionReceivedMethod');
-    final payload = receivedNotification.payload ?? {};
-    if (payload["navigate"] == "true") {
-      // MyApp.navigatorKey.currentState?.push(MaterialPageRoute(builder: (_) => SplashScreen()));
+    final payload = receivedAction.payload ?? {};
+    final taskId = payload['taskId'];
+    if (taskId == null || taskId.isEmpty) return;
+
+    // Faqat DONE tugmasi: is_done = 1
+    if (receivedAction.buttonKeyPressed == 'DONE') {
+      await TaskLocalDataSource.instance.markDone(taskId);
     }
   }
 
+
   static Future<void> showNotification({required TaskModel message}) async {
-    String title = message.title ?? "";
-    String body = message.description ?? "";
+    final title = message.title ?? '';
+    final body = "Bajarildi" ?? '';
     await AwesomeNotifications().createNotification(
-      content: NotificationContent(id: Random().nextInt(100000), channelKey: 'high_importance_channel', title: title, body: body),
+      content: NotificationContent(
+        id: Random().nextInt(100000),
+        channelKey: 'high_importance_channel',
+        title: title,
+        body: body,
+      ),
+    );
+  }
+
+  static Future<void> showTaskReminder({required TaskModel task}) async {
+    await AwesomeNotifications().createNotification(
+      content: NotificationContent(
+        id: DateTime.now().millisecondsSinceEpoch % 100000000,
+        channelKey: 'high_importance_channel',
+        title: 'Bajardingizmi?',
+        body: task.title ?? 'Vazifa',
+        payload: {'taskId': task.id},
+      ),
       actionButtons: [
         NotificationActionButton(
-          key: 'MARK_DONE',       // 🔑 tugma identifikatori
-          label: 'Bajarildi',     // tugma matni
-          actionType: ActionType.Default, // app’ni ochmasdan ham ishlaydi
-          autoDismissible: true,  // bosilganda kartochkani yopadi
-          isDangerousOption: false, // ixtiyoriy
+          key: 'DONE',
+          label: 'Ha, bajardim',
         ),
-
       ],
     );
   }

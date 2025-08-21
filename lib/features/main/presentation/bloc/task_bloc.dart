@@ -46,6 +46,7 @@ class TaskBloc extends Bloc<TaskEvent, TaskState> {
       await repository.updateTask(event.task);
       if(event.task.isDone) {
         AwesomeNotificationService.showNotification(message: event.task);
+        AwesomeNotificationService.showTaskReminder(task: event.task);
       }
       add(LoadTasks());
       await WidgetBridge.refreshHomeWidgetCounts();

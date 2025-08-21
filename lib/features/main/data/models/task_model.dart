@@ -1,12 +1,12 @@
 class TaskModel {
-  final int? id;
+  final String id;
   final String title;
   final String? description;
   final bool isDone;
   final DateTime createdAt;
 
   TaskModel({
-    this.id,
+    required this.id,
     required this.title,
     this.description,
     this.isDone = false,
@@ -15,7 +15,7 @@ class TaskModel {
 
 
   TaskModel copyWith({
-    int? id,
+    String? id,
     String? title,
     String? description,
     bool? isDone,

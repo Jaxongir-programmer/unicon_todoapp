@@ -10,8 +10,6 @@ import 'package:todoapp/features/main/data/models/task_model.dart';
 import 'package:todoapp/features/main/presentation/bloc/task_bloc.dart';
 import 'package:workmanager/workmanager.dart';
 
-import '../../../../core/widget_bridge.dart';
-
 class MainScreen extends StatefulWidget {
   const MainScreen({Key? key}) : super(key: key);
 
@@ -26,9 +24,6 @@ class _MainScreenState extends State<MainScreen> with SingleTickerProviderStateM
 
   @override
   void initState() {
-    Future.microtask(() async {
-      await WidgetBridge.refreshHomeWidgetCounts();
-    });
     tabController = TabController(
       length: 3,
       vsync: this,
@@ -54,7 +49,7 @@ class _MainScreenState extends State<MainScreen> with SingleTickerProviderStateM
       body: BlocConsumer<TaskBloc, TaskState>(
         listener: (context, state) {
           if (state.addTaskStatus == FormzSubmissionStatus.success) {
-            context.showSnackBar("Vazifa muvaffaqiyatli qo'shildi");
+            // context.showSnackBar("Vazifa muvaffaqiyatli qo'shildi");
           }
         },
         builder: (BuildContext context, state) {
@@ -173,6 +168,7 @@ class _MainScreenState extends State<MainScreen> with SingleTickerProviderStateM
                 context.read<TaskBloc>().add(
                       AddTask(
                         TaskModel(
+                          id: UniqueKey().toString(),
                             title: titleController.text, description: descriptionController.text, createdAt: DateTime.now()),
                       ),
                     );
@@ -183,8 +179,8 @@ class _MainScreenState extends State<MainScreen> with SingleTickerProviderStateM
         );
       },
     ).then((_) {
-      // paymentController.clear();
-      // commentController.clear();
+      titleController.clear();
+      descriptionController.clear();
     });
   }
 
